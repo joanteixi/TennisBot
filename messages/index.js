@@ -1,41 +1,51 @@
 "use strict";
-var restify = require('restify');
-var builder = require('botbuilder');
-var http = require('http');
+var builder = require("botbuilder");
+var botbuilder_azure = require("botbuilder-azure");
 
-// Create bot and add dialogs
-var bot = new builder.BotConnectorBot({
-  appId: '44d273b7-5a73-440c-8724-84cbdbdd02ea',
-  appSecret: '9mOQ0E0btDgnnf2kBfUP0bR' });
+var useEmulator = (process.env.NODE_ENV == 'development');
 
-bot.add('/', function (session) {
-var messageText = session.message.text;
-var goodAnswers = [
-  "Very good", "nice work", "You're awesome"
-];
-var badAnswers = [
-  "Pufff... do something!", "Go to take a beer", "C'mon!!!! you can do it better"
-];
-var pattern = /[0-9]+/g;
-var score = messageText.match(pattern);
+var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
+    appId: process.env['MicrosoftAppId'],
+    appPassword: process.env['MicrosoftAppPassword'],
+    stateEndpoint: process.env['BotStateEndpoint'],
+    openIdMetadata: process.env['BotOpenIdMetadata']
+});
 
-var answer = '';
-if (score[0] > score[1]) {
-  answer = goodAnswers[getRandom(0,2)];
+var bot = new builder.UniversalBot(connector);
+
+bot.dialog('/', function (session) {
+  var messageText = session.message.text;
+  var goodAnswers = [
+    "Very good", "nice work", "You're awesome"
+  ];
+  var badAnswers = [
+    "Pufff... do something!", "Go to take a beer", "C'mon!!!! you can do it better"
+  ];
+  var pattern = /[0-9]+/g;
+  var score = messageText.match(pattern);
+
+  var answer = '';
+  if (score[0] > score[1]) {
+    answer = goodAnswers[getRandom(0,2)];
+  } else {
+    answer = badAnswers[getRandom(0,2)];
+  }
+
+  session.send(answer);
+
+
+});
+
+if (useEmulator) {
+    var restify = require('restify');
+    var server = restify.createServer();
+    server.listen(3978, function() {
+        console.log('test bot endpont at http://localhost:3978/api/messages');
+    });
+    server.post('/api/messages', connector.listen());
 } else {
-  answer = badAnswers[getRandom(0,2)];
+    module.exports = { default: connector.listen() }
 }
-
-session.send(answer);
-
-});
-
-// Setup Restify Server
-var server = restify.createServer();
-server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
-server.listen(process.env.port || 3978, function () {
-    console.log('%s listening to %s', server.name, server.url);
-});
 
 
 
