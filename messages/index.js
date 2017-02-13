@@ -9,7 +9,6 @@ var bot = new builder.BotConnectorBot({
   appSecret: '9mOQ0E0btDgnnf2kBfUP0bR' });
 
 bot.add('/', function (session) {
-console.log(session.message);
 var messageText = session.message.text;
 var goodAnswers = [
   "Very good", "nice work", "You're awesome"
