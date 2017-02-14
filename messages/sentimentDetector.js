@@ -27,9 +27,6 @@ module.exports = function(text, callback) {
             if (res.statusCode == 200) {
                 callback(null, obj.documents[0].score);
             }
-            //console.log('%d -> %j', res.statusCode, res.headers);
-            //console.log('%j', obj);
         });
-
 }
 //nothing below...
